@@ -1,0 +1,8 @@
+---
+- import_tasks: configfile.yml
+  tags:
+    - configfile
+
+- import_tasks: linking.yml
+  tags:
+    - linking

@@ -1,0 +1,26 @@
+---
+kxlops_workspace_default_config_yml: ../../workspace.yml
+
+# The following are created dynamically in workspace.yml
+#workspace_projects: []
+#workspace_environments: []
+
+kxlops_workspace_base_path: "{{ playbook_dir | dirname | dirname }}"
+
+kxlops_workspace_update_config_yml:
+#  - { regexp: '^kxlops_workspace_base_path', line: "kxlops_workspace_base_path: \"{{ playbook_dir | replace('/plays/setup', '')}}\"" }
+  - { regexp: '^workspace_projects', line: "workspace_projects: [\"{{ workspace_projects | join('\",\"') }}\"]" }
+  - { regexp: '^workspace_environments', line: "workspace_environments: [\"{{ workspace_environments | join('\",\"') }}\"]" }
+
+kxlops_workspace_shared_group_vars: []
+
+kxlops_workspace_builds_dir: _builds
+kxlops_workspace_artifacts_dir: _artifacts
+
+kxlops_workspace_ssh_key_path: ~/.ssh
+
+kxlops_workspace_keys:
+  - "{{ kxlops_workspace_base_path }}/env/_shared/keys/*"
+
+# if running NOT from a vagrant box override this value to false
+kxlops_workspace_vagrant: true

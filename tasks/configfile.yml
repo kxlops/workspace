@@ -1,0 +1,69 @@
+---
+# Initialize some vars
+- name: Initialize some vars
+  set_fact:
+    workspace_projects: []
+    workspace_environments: []
+
+- name: Check if workspace.yml exists
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - '{{ kxlops_workspace_config_yml }}'
+      skip: true
+  register: config_yml
+
+#- debug: msg="{{ playbook_dir }}"
+
+- name: Create workspace.yml if it does not exists
+  copy:
+    content: ""
+    dest: '{{ kxlops_workspace_config_yml }}'
+    force: no
+  when: (config_yml.skipped is defined) | ternary(true,false)
+
+- name: Env Part 1 - Find all env directories
+  find:
+    paths: '{{ kxlops_workspace_base_path }}/env'
+    file_type: directory
+    recurse: no
+  register: available_env
+
+- name: Env Part 2 - Build list of environments
+  set_fact:
+    workspace_environments: "{{workspace_environments + [item.split('/')[-1]] }}"
+  with_items: "{{available_env.files | map(attribute='path') | list }}"
+  when: item.split('/')[-1] != '_shared'
+
+- name: Projects Part 1 - Find all projects
+  find:
+    paths: '{{ kxlops_workspace_base_path }}/env/_shared/group_vars/'
+    patterns: "^000_*"
+    use_regex: yes
+  register: available_projects
+
+- name: Projects Part 2 - Build list of project group_vars
+  set_fact:
+    kxlops_workspace_shared_group_vars: "{{kxlops_workspace_shared_group_vars + [item.split('/')[-1 ]] }}"
+  with_items: "{{available_projects.files | map(attribute='path') | list }}"
+
+- name: Projects Part 3 - Build list of project group_vars
+  set_fact:
+    workspace_projects: "{{workspace_projects + [ item.split('000_')[-1 ].split('.yml')[0] ]}}"
+  with_items: "{{ kxlops_workspace_shared_group_vars }}"
+#  when: item.split('000_')[-1 ].split('.yml')[0] != 'all'
+
+- name: Updating values for workspace.yml
+  lineinfile:
+    path: '{{ kxlops_workspace_config_yml }}'
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertbefore: BOF
+    state: present
+  with_items: '{{ kxlops_workspace_update_config_yml }}'
+
+- debug:
+    msg:
+      - '{{ workspace_environments }}'
+      - '{{ kxlops_workspace_shared_group_vars }}'
+      - '{{ workspace_projects }}'

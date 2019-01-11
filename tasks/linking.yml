@@ -1,0 +1,49 @@
+---
+- name: ALL | Recursively find all linked files in env/
+  find:
+    paths: '{{ kxlops_workspace_base_path }}/env'
+    file_type: link
+    recurse: yes
+  register: linked_files_to_delete
+  tags:
+    - removelinks
+
+- name: ALL | Remove linked files in env/
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ linked_files_to_delete.files }}"
+  tags:
+    - removelinks
+
+- name: ALL | Link shared hosts
+  file:
+    src: '{{ kxlops_workspace_base_path }}/env/_shared/hosts/000_common.hosts'
+    dest: '{{ kxlops_workspace_base_path }}/env/{{ item }}/000_common_linked.hosts'
+    state: link
+  with_items: '{{ workspace_environments }}'
+  tags:
+    - buildlinks
+
+- name: ALL | create directories for group_vars
+  file:
+    dest: '{{ kxlops_workspace_base_path }}/env/{{ item[1] }}/group_vars/{{ item[0] }}/'
+    state: directory
+    force: yes
+  with_nested:
+    - '{{ workspace_projects }}'
+    - '{{ workspace_environments }}'
+  tags:
+    - buildlinks
+
+- name: ALL | Link shared group_vars
+  file:
+    src: '{{ kxlops_workspace_base_path }}/env/_shared/group_vars/000_{{ item[0] }}.yml'
+    dest: '{{ kxlops_workspace_base_path }}/env/{{ item[1] }}/group_vars/{{ item[0] }}/000_{{ item[0] }}_linked.yml'
+    state: link
+    force: yes
+  with_nested:
+    - '{{ workspace_projects }}'
+    - '{{ workspace_environments }}'
+  tags:
+    - buildlinks
