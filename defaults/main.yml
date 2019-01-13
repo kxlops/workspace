@@ -1,14 +1,14 @@
 ---
-kxlops_workspace_default_config_yml: ../../workspace.yml
-
 # The following are created dynamically in workspace.yml
 #workspace_projects: []
 #workspace_environments: []
 
-kxlops_workspace_base_path: "{{ playbook_dir | dirname | dirname }}"
+kxlops_workspace_base_path: "{{ playbook_dir }}"
+
+kxlops_workspace_config_yml: "{{ kxlops_workspace_base_path }}/workspace.yml"
 
 kxlops_workspace_update_config_yml:
-#  - { regexp: '^kxlops_workspace_base_path', line: "kxlops_workspace_base_path: \"{{ playbook_dir | replace('/plays/setup', '')}}\"" }
+  #  - { regexp: '^kxlops_workspace_base_path', line: "kxlops_workspace_base_path: \"{{ playbook_dir | replace('/plays/setup', '')}}\"" }
   - { regexp: '^workspace_projects', line: "workspace_projects: [\"{{ workspace_projects | join('\",\"') }}\"]" }
   - { regexp: '^workspace_environments', line: "workspace_environments: [\"{{ workspace_environments | join('\",\"') }}\"]" }
 
@@ -18,6 +18,12 @@ kxlops_workspace_builds_dir: _builds
 kxlops_workspace_artifacts_dir: _artifacts
 
 kxlops_workspace_ssh_key_path: ~/.ssh
+
+kxlops_workspace_role: defaut
+
+kxlops_workspace_env: default
+
+kxlops_workspace_branch: master
 
 kxlops_workspace_keys:
   - "{{ kxlops_workspace_base_path }}/env/_shared/keys/*"
